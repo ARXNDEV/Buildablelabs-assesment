@@ -1,12 +1,14 @@
 # TaskFlow — n8n Automation (Phase 3)
 
-Three importable workflows. Each talks to the deployed backend over HTTPS. They're exported with
-**placeholders** you replace after import — search-and-replace these across each workflow:
+Three importable workflows. Each talks to the deployed backend over HTTPS.
+
+The backend URL is **already set** to the live deployment
+(`https://buildablelabs-assesment-1.onrender.com`). The remaining **placeholders** are secrets —
+replace them after import (kept out of the repo on purpose):
 
 | Placeholder | Replace with |
 |-------------|--------------|
-| `https://YOUR-RENDER-APP.onrender.com` | your deployed backend URL |
-| `YOUR_BACKEND_API_KEY` | the backend `API_KEY` |
+| `YOUR_BACKEND_API_KEY` | the backend `API_KEY` (paste into each HTTP node's `x-api-key` header) |
 | `YOUR_GROQ_API_KEY` | your Groq API key |
 | `https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN` | your Discord webhook URL |
 | `YOUR_GMAIL@gmail.com` / `YOUR_EMAIL@example.com` | sender / recipient for the digest |

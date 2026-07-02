@@ -13,7 +13,7 @@
     },
     {
       "parameters": {
-        "url": "https://YOUR-RENDER-APP.onrender.com/api/tasks/reminders",
+        "url": "https://buildablelabs-assesment-1.onrender.com/api/tasks/reminders",
         "sendHeaders": true,
         "headerParameters": { "parameters": [{ "name": "x-api-key", "value": "YOUR_BACKEND_API_KEY" }] },
         "options": {}
@@ -74,7 +74,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR-RENDER-APP.onrender.com/api/tasks/reminders/mark",
+        "url": "https://buildablelabs-assesment-1.onrender.com/api/tasks/reminders/mark",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

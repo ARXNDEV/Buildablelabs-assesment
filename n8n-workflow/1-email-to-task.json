@@ -61,7 +61,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR-RENDER-APP.onrender.com/api/tasks",
+        "url": "https://buildablelabs-assesment-1.onrender.com/api/tasks",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
