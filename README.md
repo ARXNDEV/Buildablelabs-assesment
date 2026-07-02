@@ -21,6 +21,10 @@ you get a Discord reminder when it's due and an emailed digest every week.
                             └───────────────┘      └──────────────────────┘
 ```
 
+**Live backend:** https://buildablelabs-assesment-1.onrender.com — try
+[`/health`](https://buildablelabs-assesment-1.onrender.com/health). (`/api/*` needs the `x-api-key`
+header. Free tier cold-starts in ~50s.)
+
 **One-line demo story:** email → Groq parses it → backend → Supabase → shows in the mobile UI with a
 "from email" badge → Discord reminder when due → weekly email digest. Every hop is demonstrable.
 
@@ -98,7 +102,8 @@ Gmail IMAP / SMTP / Discord / Groq credentials (full guide in that folder's READ
 - Backend: `npm test` green (10 tests); server boots; `/health` ok; 401 without key; 400 on bad body.
 - Mobile: `tsc --noEmit` clean; `expo export` bundles the full iOS app (all native modules resolve).
 - n8n: all three workflow JSONs validated as importable.
-- Live DB round-trip + Render deploy: complete once real Supabase credentials are in place.
+- **Live:** backend deployed to Render — `/health`, full CRUD, soft-delete, and the auth gate all
+  verified against the live Supabase database.
 
 ## Prompt sharing
 See [`PROMPTS.md`](./PROMPTS.md). Claude Code session link: _(add on submission)_.
