@@ -4,10 +4,20 @@ export const STATUSES = ['todo', 'done'] as const;
 export const PRIORITIES = ['low', 'medium', 'high'] as const;
 export const SOURCES = ['mobile', 'email', 'api'] as const;
 
-/** Accepts an ISO datetime string or null; empty string is treated as null. */
+/**
+ * Accepts an ISO datetime string or null; empty string is treated as null.
+ * `local: true` also allows datetimes without a timezone offset (e.g.
+ * "2026-07-03T17:00:00"), which is what the Groq email parser and many clients
+ * emit. We normalize a bare local datetime to UTC so Postgres stores it
+ * consistently.
+ */
 const nullableDate = z
-  .union([z.string().datetime({ offset: true }), z.string().length(0), z.null()])
-  .transform((v) => (v ? v : null))
+  .union([z.string().datetime({ offset: true, local: true }), z.string().length(0), z.null()])
+  .transform((v) => {
+    if (!v) return null;
+    // If the string carries no timezone info, treat it as UTC.
+    return /[zZ]|[+-]\d{2}:?\d{2}$/.test(v) ? v : `${v}Z`;
+  })
   .optional();
 
 export const createTaskSchema = z.object({

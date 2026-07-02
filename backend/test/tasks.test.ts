@@ -61,6 +61,16 @@ describe('zod schemas', () => {
     expect(parsed.due_at).toBeNull();
   });
 
+  it('accepts a datetime without offset (LLM output) and normalizes to UTC', () => {
+    const parsed = createTaskSchema.parse({ title: 'x', due_at: '2026-07-03T17:00:00' });
+    expect(parsed.due_at).toBe('2026-07-03T17:00:00Z');
+  });
+
+  it('leaves an offset datetime untouched', () => {
+    const parsed = createTaskSchema.parse({ title: 'x', due_at: '2026-07-03T17:00:00Z' });
+    expect(parsed.due_at).toBe('2026-07-03T17:00:00Z');
+  });
+
   it('rejects an invalid priority', () => {
     expect(() => createTaskSchema.parse({ title: 'x', priority: 'urgent' })).toThrow();
   });
