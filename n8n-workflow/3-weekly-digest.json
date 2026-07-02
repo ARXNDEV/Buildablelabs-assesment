@@ -1,0 +1,63 @@
+{
+  "name": "TaskFlow · Weekly Digest (Email)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 8 * * 1" }] }
+      },
+      "id": "schedule",
+      "name": "Monday 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://YOUR-RENDER-APP.onrender.com/api/tasks/digest",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "x-api-key", "value": "YOUR_BACKEND_API_KEY" }] },
+        "options": {}
+      },
+      "id": "get-digest",
+      "name": "Get Weekly Digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));\nconst upcoming = (d.dueThisWeek || []).map(t => `<li style=\"margin:6px 0\">${esc(t.title)}${t.due_at ? ` — <b>${new Date(t.due_at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</b>` : ''}</li>`).join('') || '<li style=\"color:#64748b\">Nothing due this week — enjoy it! 🎉</li>';\nconst card = (label, val, color) => `<td align=\"center\" style=\"padding:14px 8px\"><div style=\"font-size:28px;font-weight:800;color:${color}\">${val}</div><div style=\"font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.5px\">${label}</div></td>`;\nconst html = `<div style=\"font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;background:#fff\">\n  <div style=\"background:#6366f1;padding:24px;border-radius:14px 14px 0 0\"><div style=\"color:#c7d2fe;font-size:12px;font-weight:700;letter-spacing:1px\">TASKFLOW</div><div style=\"color:#fff;font-size:22px;font-weight:800\">Your week at a glance</div></div>\n  <div style=\"border:1px solid #e6e8ec;border-top:none;border-radius:0 0 14px 14px;padding:8px 20px 24px\">\n    <table width=\"100%\" style=\"border-collapse:collapse;margin:8px 0 4px\"><tr>${card('Completed', d.completedThisWeek, '#10b981')}${card('Pending', d.pending, '#6366f1')}${card('Overdue', d.overdue, '#ef4444')}</tr></table>\n    <p style=\"color:#334155;font-size:14px;margin:16px 0 6px\"><b>Due this week</b></p>\n    <ul style=\"padding-left:18px;color:#334155;font-size:14px;margin:0\">${upcoming}</ul>\n    <p style=\"color:#94a3b8;font-size:12px;margin-top:20px\">Open tasks by priority — 🔴 ${d.byPriority.high} high · 🟡 ${d.byPriority.medium} medium · 🟢 ${d.byPriority.low} low. You created ${d.createdThisWeek} new task(s) this week.</p>\n  </div>\n</div>`;\nreturn { json: { html, subject: `TaskFlow weekly digest — ${d.pending} open, ${d.overdue} overdue` } };"
+      },
+      "id": "build-html",
+      "name": "Build Digest Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "YOUR_GMAIL@gmail.com",
+        "toEmail": "YOUR_EMAIL@example.com",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Digest (SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [720, 300],
+      "credentials": {
+        "smtp": { "id": "REPLACE_WITH_SMTP_CREDENTIAL", "name": "TaskFlow Gmail SMTP" }
+      }
+    }
+  ],
+  "connections": {
+    "Monday 08:00": { "main": [[{ "node": "Get Weekly Digest", "type": "main", "index": 0 }]] },
+    "Get Weekly Digest": { "main": [[{ "node": "Build Digest Email", "type": "main", "index": 0 }]] },
+    "Build Digest Email": { "main": [[{ "node": "Send Digest (SMTP)", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
