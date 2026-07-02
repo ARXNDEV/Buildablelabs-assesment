@@ -1,0 +1,26 @@
+# Render Blueprint — deploy with: New → Blueprint → point at this repo.
+# Set the secret env values in the Render dashboard (marked sync:false).
+services:
+  - type: web
+    name: taskflow-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: API_KEY
+        sync: false
