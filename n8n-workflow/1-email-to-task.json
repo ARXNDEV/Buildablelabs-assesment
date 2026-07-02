@@ -1,0 +1,92 @@
+{
+  "name": "TaskFlow · Email → Task (Groq)",
+  "nodes": [
+    {
+      "parameters": {
+        "postProcessAction": "read",
+        "format": "resolved",
+        "options": {}
+      },
+      "id": "imap-trigger",
+      "name": "Email Received (IMAP)",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [-40, 300],
+      "credentials": {
+        "imap": { "id": "REPLACE_WITH_IMAP_CREDENTIAL", "name": "TaskFlow Gmail IMAP" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalise the IMAP payload into a stable shape for downstream nodes.\nconst j = $input.item.json;\nconst from = typeof j.from === 'object' ? (j.from.text || j.from.value?.[0]?.address || '') : (j.from || '');\nconst body = j.textPlain || j.text || (j.textHtml ? j.textHtml.replace(/<[^>]+>/g, ' ') : '') || '';\nreturn { json: { subject: j.subject || '(no subject)', body: String(body).slice(0, 4000), from } };"
+      },
+      "id": "normalize",
+      "name": "Normalize Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer YOUR_GROQ_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'llama-3.3-70b-versatile', temperature: 0.2, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: 'You turn an email into a single actionable task. Today is ' + $now.toISO() + '. Reply with ONLY a JSON object: {\"title\": string (<=120 chars, imperative), \"description\": string|null, \"priority\": \"low\"|\"medium\"|\"high\", \"due_at\": ISO8601 string|null}. Infer due_at from phrases like \"by Friday\", \"tomorrow 5pm\". Use null when there is no clear due date.' }, { role: 'user', content: 'Subject: ' + $json.subject + '\\nFrom: ' + $json.from + '\\n\\n' + $json.body } ] }) }}",
+        "options": {}
+      },
+      "id": "groq",
+      "name": "Groq · Parse Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Groq's JSON reply and build the task payload.\nlet parsed = {};\ntry { parsed = JSON.parse($json.choices[0].message.content); } catch (e) { parsed = {}; }\nconst subject = $('Normalize Email').item.json.subject;\nconst priorities = ['low', 'medium', 'high'];\nconst payload = {\n  title: (parsed.title && String(parsed.title).trim()) || subject,\n  description: parsed.description ? String(parsed.description) : $('Normalize Email').item.json.body.slice(0, 500),\n  priority: priorities.includes(parsed.priority) ? parsed.priority : 'medium',\n  due_at: parsed.due_at || null,\n  source: 'email'\n};\nreturn { json: payload };"
+      },
+      "id": "build-payload",
+      "name": "Build Task Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-RENDER-APP.onrender.com/api/tasks",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "YOUR_BACKEND_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "create-task",
+      "name": "Create Task (Backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "Email Received (IMAP)": { "main": [[{ "node": "Normalize Email", "type": "main", "index": 0 }]] },
+    "Normalize Email": { "main": [[{ "node": "Groq · Parse Task", "type": "main", "index": 0 }]] },
+    "Groq · Parse Task": { "main": [[{ "node": "Build Task Payload", "type": "main", "index": 0 }]] },
+    "Build Task Payload": { "main": [[{ "node": "Create Task (Backend)", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
