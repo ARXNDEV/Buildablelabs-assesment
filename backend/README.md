@@ -57,9 +57,15 @@ npm run build && npm start
 ```
 
 ## Deploy (Render)
-This repo includes a `Dockerfile` and `render.yaml` blueprint. In Render: **New → Blueprint**, pick
-the repo, then set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `API_KEY` as environment
-variables. Render health-checks `/health`.
+The **`render.yaml` blueprint lives at the repo root** (Render only reads blueprints from the root)
+and builds this `backend/` folder via `rootDir` using the **Node** runtime — no Dockerfile needed.
+
+In Render: **New → Blueprint** → pick the repo → it auto-detects `render.yaml` → set the three secret
+env vars (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `API_KEY`) → **Apply**. Render injects `PORT`
+and health-checks `/health`.
+
+> A `Dockerfile` is also included as an alternative (e.g. `docker build` locally). If you deploy via
+> Docker on Render instead of the blueprint, set the service's **Root Directory** to `backend`.
 
 ## Example
 

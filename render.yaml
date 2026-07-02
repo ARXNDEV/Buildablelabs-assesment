@@ -1,11 +1,16 @@
-# Render Blueprint — deploy with: New → Blueprint → point at this repo.
-# Set the secret env values in the Render dashboard (marked sync:false).
+# Render Blueprint — MUST live at the repo root.
+# Deploy: Render Dashboard → New → Blueprint → select this repo → set the 3
+# secret env vars (marked sync:false) → Apply.
+#
+# Uses the Node runtime and builds from the backend/ subfolder via rootDir, so
+# no Dockerfile path juggling. Render injects PORT automatically; the app reads
+# process.env.PORT, so we do NOT set PORT here.
 services:
   - type: web
     name: taskflow-backend
     runtime: node
-    region: oregon
     plan: free
+    region: oregon
     rootDir: backend
     buildCommand: npm ci && npm run build
     startCommand: npm start
@@ -14,8 +19,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 8080
       - key: CORS_ORIGIN
         value: "*"
       - key: SUPABASE_URL
